@@ -282,6 +282,42 @@ task tar(type: Tar) {
   }
 }
 
+task runApp(type: JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "freenet.node.Node"
+    def runtimeDir = file("$projectDir/rundir")
+    def nodesDir = file("$runtimeDir/noderef")
+    doFirst {
+        runtimeDir.mkdirs()
+        def sourceConfigFile = file("hyphanet-dev.ini")
+        def targetConfigFile = new File(runtimeDir, "freenet.ini")
+        def sourceSeedNodesFile = file("seednodes.fref")
+        def targetSeedNodesFile = new File(nodesDir, "seednodes.fref")
+
+        if (!targetConfigFile.exists()) {
+            copy {
+                from sourceConfigFile
+                into runtimeDir
+                rename { "freenet.ini" }
+            }
+            println "Copied config to ${targetConfigFile.absolutePath}"
+        } else {
+            println "Config already exists in ${runtimeDir.absolutePath}"
+        }
+
+        if (!targetSeedNodesFile.exists()) {
+            copy {
+                from sourceSeedNodesFile
+                into nodesDir
+            }
+            println "Copied seed nodes to ${targetSeedNodesFile.absolutePath}"
+        } else {
+            println "Seed nodes file already exists in ${nodesDir.absolutePath}"
+        }
+    }
+    workingDir = runtimeDir
+}
+
 javadoc {
     doLast {
         failOnError false
